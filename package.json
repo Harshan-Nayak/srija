@@ -59,7 +59,8 @@
     "@react-native-community/datetimepicker": "8.2.0",
     "expo-sharing": "~13.0.1",
     "expo-file-system": "~18.0.11",
-    "expo-intent-launcher": "~12.0.2"
+    "expo-intent-launcher": "~12.0.2",
+    "expo-image-manipulator": "~13.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
