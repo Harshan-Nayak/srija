@@ -1,3 +1,4 @@
+
 import 'react-native-get-random-values';
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert, Platform, KeyboardAvoidingView } from 'react-native';
@@ -5,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail } from 'react-native-google-places-autocomplete';
+import { GooglePlaceData, GooglePlaceDetail } from 'react-native-google-places-autocomplete';
+import SafeGooglePlacesAutocomplete from '../../components/SafeGooglePlacesAutocomplete';
 
 const { width, height } = Dimensions.get('window');
 
@@ -16,16 +18,7 @@ const INITIAL_REGION: Region = {
   longitudeDelta: 0.0421,
 };
 
-const API_KEY = 'AIzaSyChohq3UosE8u0QBRugqMMxInXQ4WKL2L4';
-
-interface LocationDetails {
-  geometry: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
-}
+const API_KEY = 'AIzaSyAfWzd1B2xm3sFT0K_uogXClq112REL_NE';
 
 export default function PlansScreen() {
   const router = useRouter();
@@ -33,14 +26,29 @@ export default function PlansScreen() {
   const [currentLocation, setCurrentLocation] = useState<Region>(INITIAL_REGION);
   const [selectedLocation, setSelectedLocation] = useState<Region | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  console.log('PlansScreen: Component rendered');
 
   useEffect(() => {
-    getCurrentLocation();
-    verifyApiKey();
+    const initializeScreen = async () => {
+      try {
+        setIsLoading(true);
+        await getCurrentLocation();
+        await verifyApiKey();
+      } catch (error) {
+        console.error('PlansScreen: Initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeScreen();
   }, []);
 
   const getCurrentLocation = async () => {
     try {
+      console.log('PlansScreen: Getting current location');
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'Location permission is required.');
@@ -56,19 +64,21 @@ export default function PlansScreen() {
       setCurrentLocation(newLocation);
       setSelectedLocation(newLocation);
       mapRef.current?.animateToRegion(newLocation, 1000);
+      console.log('PlansScreen: Location set successfully');
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('PlansScreen: Error getting location:', error);
       Alert.alert('Error', 'Failed to get current location.');
     }
   };
 
   const verifyApiKey = async () => {
     try {
+      console.log('PlansScreen: Verifying API key');
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=40.714224,-73.961452&key=${API_KEY}`
       );
       const data = await response.json();
-      console.log('API Status:', data.status);
+      console.log('PlansScreen: API Status:', data.status);
       if (data.status === 'REQUEST_DENIED') {
         console.error('API Key Error:', data.error_message);
         Alert.alert(
@@ -78,47 +88,81 @@ export default function PlansScreen() {
         );
       }
     } catch (error) {
-      console.error('API Verification Error:', error);
+      console.error('PlansScreen: API Verification Error:', error);
     }
   };
 
-  const handleLocationSelect = (_: GooglePlaceData, details: GooglePlaceDetail | null) => {
-    if (!details) {
-      setSearchError('Location details not found');
-      return;
+  const handleLocationSelect = (data: GooglePlaceData, details: GooglePlaceDetail | null) => {
+    try {
+      console.log('PlansScreen: Location selected:', data.description);
+      if (!details) {
+        setSearchError('Location details not found');
+        return;
+      }
+      
+      setSearchError(null);
+      const newLocation: Region = {
+        latitude: details.geometry.location.lat,
+        longitude: details.geometry.location.lng,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      
+      setSelectedLocation(newLocation);
+      mapRef.current?.animateToRegion(newLocation, 1000);
+    } catch (error) {
+      console.error('PlansScreen: Error handling location select:', error);
+      setSearchError('Error processing location');
     }
-    
-    setSearchError(null);
-    const newLocation: Region = {
-      latitude: details.geometry.location.lat,
-      longitude: details.geometry.location.lng,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    };
-    
-    setSelectedLocation(newLocation);
-    mapRef.current?.animateToRegion(newLocation, 1000);
   };
 
   const handleConfirmLocation = () => {
-    if (!selectedLocation) return;
-    
-    // Navigate to planners list screen with location data
-    router.push({
-      pathname: '/(app)/planners-list',
-      params: {
-        latitude: selectedLocation.latitude,
-        longitude: selectedLocation.longitude
-      }
-    });
+    try {
+      console.log('PlansScreen: Confirming location');
+      if (!selectedLocation) return;
+      
+      // Navigate to planners list screen with location data
+      router.push({
+        pathname: '/(app)/planners-list',
+        params: {
+          latitude: selectedLocation.latitude.toString(),
+          longitude: selectedLocation.longitude.toString()
+        }
+      });
+    } catch (error) {
+      console.error('PlansScreen: Error confirming location:', error);
+      Alert.alert('Error', 'Failed to proceed with selected location.');
+    }
+  };
+
+  const handlePlacesError = (error: any) => {
+    console.error('PlansScreen: GooglePlaces Error:', error);
+    Alert.alert(
+      'Search Error',
+      'There was an error loading places. Please try again later.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handlePlacesNotFound = () => {
+    console.log('PlansScreen: No places found');
+    Alert.alert(
+      'No Results',
+      'No locations found matching your search.',
+      [{ text: 'OK' }]
+    );
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => {
+          console.log('PlansScreen: Back button pressed');
+          router.back();
+        }}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
+        <Text style={styles.title}>Select Location</Text>
         <TouchableOpacity>
           <Ionicons name="menu" size={28} color="#000" />
         </TouchableOpacity>
@@ -151,27 +195,12 @@ export default function PlansScreen() {
       >
         <View style={styles.searchWrapper}>
           <View style={styles.searchContainer}>
-            <GooglePlacesAutocomplete
+            <SafeGooglePlacesAutocomplete
               placeholder="Search location (e.g., Pune)"
               onPress={handleLocationSelect}
-              fetchDetails={true}
-              enablePoweredByContainer={false}
-              query={{
-                key: API_KEY,
-                language: 'en',
-                types: 'geocode',
-                components: 'country:in'
-              }}
-              currentLocation={true}
-              currentLocationLabel="Current location"
-              nearbyPlacesAPI="GooglePlacesSearch"
-              GoogleReverseGeocodingQuery={{}}
-              GooglePlacesSearchQuery={{
-                rankby: 'distance',
-              }}
-              filterReverseGeocodingByTypes={['locality', 'administrative_area_level_1']}
-              keyboardShouldPersistTaps="handled"
-              listViewDisplayed="auto"
+              onFail={handlePlacesError}
+              onNotFound={handlePlacesNotFound}
+              apiKey={API_KEY}
               styles={{
                 container: {
                   flex: 0,
@@ -224,25 +253,6 @@ export default function PlansScreen() {
                 autoFocus: false,
                 selectionColor: '#000',
               }}
-              minLength={2}
-              debounce={300}
-              enableHighAccuracyLocation={true}
-              timeout={15000}
-              onFail={(error) => {
-                console.error('GooglePlaces Error:', error);
-                Alert.alert(
-                  'Search Error',
-                  'There was an error loading places. Please try again later.',
-                  [{ text: 'OK' }]
-                );
-              }}
-              onNotFound={() => {
-                Alert.alert(
-                  'No Results',
-                  'No locations found matching your search.',
-                  [{ text: 'OK' }]
-                );
-              }}
             />
             {searchError && (
               <View style={styles.errorContainer}>
@@ -259,10 +269,12 @@ export default function PlansScreen() {
 
           <TouchableOpacity 
             style={[styles.confirmButton, !selectedLocation && styles.confirmButtonDisabled]}
-            disabled={!selectedLocation}
+            disabled={!selectedLocation || isLoading}
             onPress={handleConfirmLocation}
           >
-            <Text style={styles.confirmButtonText}>Confirm Location</Text>
+            <Text style={styles.confirmButtonText}>
+              {isLoading ? 'Loading...' : 'Confirm Location'}
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -287,7 +299,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
   },
   keyboardAvoidingView: {
     position: 'absolute',

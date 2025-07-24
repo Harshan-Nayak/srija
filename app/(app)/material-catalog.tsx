@@ -52,9 +52,41 @@ export default function MaterialCatalogScreen() {
 
       // Open the PDF directly using the download URL
       await openPDF(downloadUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading PDF:', error);
-      Alert.alert('Error', 'Failed to open the catalog');
+      
+      // Handle specific Firebase Storage errors
+      if (error.code === 'storage/object-not-found') {
+        Alert.alert(
+          'Catalog Not Available',
+          `The ${title} is not available at the moment. Please try again later or contact support.`,
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else if (error.code === 'storage/unauthorized') {
+        Alert.alert(
+          'Access Denied',
+          'You do not have permission to access this catalog. Please sign in or contact support.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else if (error.code === 'storage/canceled') {
+        Alert.alert(
+          'Download Cancelled',
+          'The download was cancelled. Please try again.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else if (error.code === 'storage/unknown') {
+        Alert.alert(
+          'Network Error',
+          'Unable to download the catalog. Please check your internet connection and try again.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else {
+        Alert.alert(
+          'Error',
+          'Unable to open the catalog. Please try again later.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      }
     } finally {
       setLoading(false);
       setSelectedId(null);

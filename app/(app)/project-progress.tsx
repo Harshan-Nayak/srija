@@ -85,8 +85,8 @@ export default function ProjectProgressScreen() {
   const handleShare = async () => {
     if (!project) return;
 
-    const completedTasks = project.tasks.filter(task => task.isCompleted);
-    const totalTasks = project.tasks.length;
+    const completedTasks = project.tasks ? project.tasks.filter(task => task.isCompleted) : [];
+    const totalTasks = project.tasks ? project.tasks.length : 0;
     const progress = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
 
     // Sort completed tasks by date
@@ -160,7 +160,7 @@ Completed Task Details:${taskDetails}`;
       const downloadUrl = await getDownloadURL(imageRef);
       
       // Update task image in project
-      if (project) {
+      if (project && project.tasks) {
         const updatedTasks = project.tasks.map(task => 
           task.id === taskId ? { ...task, imageUrl: downloadUrl } : task
         );
@@ -179,7 +179,7 @@ Completed Task Details:${taskDetails}`;
   };
 
   const toggleTaskCompletion = async (taskId: string) => {
-    if (!project || !projectId) return;
+    if (!project || !projectId || !project.tasks) return;
 
     const updatedTasks = project.tasks.map(task =>
       task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
@@ -189,7 +189,9 @@ Completed Task Details:${taskDetails}`;
       const projectRef = doc(db, 'projects', projectId as string);
       await updateDoc(projectRef, { 
         tasks: updatedTasks,
-        progress: Math.round((updatedTasks.filter(t => t.isCompleted).length / updatedTasks.length) * 100)
+        progress: updatedTasks && updatedTasks.length > 0 
+          ? Math.round((updatedTasks.filter(t => t.isCompleted).length / updatedTasks.length) * 100)
+          : 0
       });
       
       setProject({ ...project, tasks: updatedTasks });
@@ -216,7 +218,9 @@ Completed Task Details:${taskDetails}`;
       
       await updateDoc(projectRef, { 
         tasks: updatedTasks,
-        progress: Math.round((updatedTasks.filter(t => t.isCompleted).length / updatedTasks.length) * 100)
+        progress: updatedTasks && updatedTasks.length > 0 
+          ? Math.round((updatedTasks.filter(t => t.isCompleted).length / updatedTasks.length) * 100)
+          : 0
       });
       
       setProject({ ...project, tasks: updatedTasks });
@@ -229,6 +233,9 @@ Completed Task Details:${taskDetails}`;
   };
 
   const sortTasksByDate = (tasks: Task[]) => {
+    if (!tasks || !Array.isArray(tasks)) {
+      return [];
+    }
     return [...tasks].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
@@ -239,7 +246,7 @@ Completed Task Details:${taskDetails}`;
 
   const onDateChange = async (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
-    if (selectedDate && selectedTaskId && project) {
+    if (selectedDate && selectedTaskId && project && project.tasks) {
       const newDate = selectedDate.toISOString().split('T')[0];
       const updatedTasks = project.tasks.map(task =>
         task.id === selectedTaskId ? { ...task, date: newDate } : task
@@ -267,7 +274,7 @@ Completed Task Details:${taskDetails}`;
   };
 
   const updateTask = async () => {
-    if (!project || !projectId || !editingTask) return;
+    if (!project || !projectId || !editingTask || !project.tasks) return;
 
     const updatedTask: Task = {
       ...editingTask,
@@ -313,7 +320,7 @@ Completed Task Details:${taskDetails}`;
     );
   }
 
-  const sortedTasks = sortTasksByDate(project.tasks);
+  const sortedTasks = sortTasksByDate(project.tasks || []);
 
   return (
     <View style={styles.container}>

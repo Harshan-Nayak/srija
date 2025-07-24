@@ -15,7 +15,7 @@
         "NSLocationAlwaysUsageDescription": "This app needs access to your location to show it on the map."
       },
       "config": {
-        "googleMapsApiKey": "AIzaSyADgA05KTjo1ow05rVpmiQ9lXBH5naB--k"
+        "googleMapsApiKey": "AIzaSyAfWzd1B2xm3sFT0K_uogXClq112REL_NE"
       },
       "bundleIdentifier": "com.srija.app"
     },
@@ -30,7 +30,7 @@
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyADgA05KTjo1ow05rVpmiQ9lXBH5naB--k"
+          "apiKey": "AIzaSyAfWzd1B2xm3sFT0K_uogXClq112REL_NE"
         }
       },
       "package": "com.srija.app"
@@ -56,7 +56,10 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

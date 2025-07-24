@@ -64,7 +64,7 @@ export default function ProgressTrackingScreen() {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         const tasks = data.tasks || [];
-        const progress = tasks.length > 0 
+        const progress = tasks && tasks.length > 0 
           ? Math.round((tasks.filter((t: any) => t.isCompleted).length / tasks.length) * 100)
           : 0;
 

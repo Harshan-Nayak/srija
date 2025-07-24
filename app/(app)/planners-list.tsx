@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Linking, A
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_KEY = 'AIzaSyChohq3UosE8u0QBRugqMMxInXQ4WKL2L4';
+const API_KEY = 'AIzaSyAfWzd1B2xm3sFT0K_uogXClq112REL_NE';
 
 interface Place {
   place_id: string;
@@ -130,7 +130,7 @@ export default function PlannersListScreen() {
         </View>
       ) : (
         <ScrollView style={styles.scrollView}>
-          {places.map((place) => (
+          {places && places.map((place) => (
             <View key={place.place_id} style={styles.plannerCard}>
               <Image
                 source={

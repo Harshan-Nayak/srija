@@ -39,20 +39,32 @@ export default function HomeScreen() {
     <TouchableOpacity 
       style={styles.menuItem}
       onPress={() => {
-        if (title === 'Plans') {
-          router.push('/(app)/plans');
-        } else if (title === 'Interior Design') {
-          router.push('/(app)/interior-design');
-        } else if (title === 'Cost Estimation') {
-          router.push('/(app)/cost-estimation');
-        } else if (title === 'Budget Tracking') {
-          router.push('/(app)/budget-tracking');
-        } else if (title === 'Progress Tracking') {
-          router.push('/(app)/progress-tracking');
-        } else if (title === 'Material catalog') {
-          router.push('/(app)/material-catalog');
-        } else if (title === 'Cost Catalog') {
-          router.push('/(app)/cost-catalog');
+        console.log(`MenuItem pressed: ${title}`);
+        try {
+          if (title === 'Plans') {
+            console.log('Navigating to Plans menu screen');
+            router.push('/(app)/plans-menu');
+          } else if (title === 'Interior Design') {
+            console.log('Navigating to Interior Design screen');
+            router.push('/(app)/interior-design');
+          } else if (title === 'Cost Estimation') {
+            console.log('Navigating to Cost Estimation screen');
+            router.push('/(app)/cost-estimation');
+          } else if (title === 'Budget Tracking') {
+            console.log('Navigating to Budget Tracking screen');
+            router.push('/(app)/budget-tracking');
+          } else if (title === 'Progress Tracking') {
+            console.log('Navigating to Progress Tracking screen');
+            router.push('/(app)/progress-tracking');
+          } else if (title === 'Material catalog') {
+            console.log('Navigating to Material catalog screen');
+            router.push('/(app)/material-catalog');
+          } else if (title === 'Cost Catalog') {
+            console.log('Navigating to Cost Catalog screen');
+            router.push('/(app)/cost-catalog');
+          }
+        } catch (error) {
+          console.error(`Error navigating to ${title}:`, error);
         }
       }}
     >

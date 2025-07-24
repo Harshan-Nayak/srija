@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import ClerkProviderComponent from './utils/ClerkProvider';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -36,36 +37,38 @@ function RootLayoutNav() {
   }, [isLoaded, isSignedIn, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen 
-        name="screens/SignInScreen" 
-        options={{ 
-          headerShown: false
-        }} 
-      />
-      <Stack.Screen 
-        name="screens/SignUpScreen" 
-        options={{ 
-          headerShown: false
-        }} 
-      />
-      <Stack.Screen 
-        name="screens/ForgotPasswordScreen" 
-        options={{ 
-          headerShown: true,
-          headerTitle: '',
-          headerTransparent: true,
-          headerTintColor: '#000',
-        }} 
-      />
-      <Stack.Screen 
-        name="(app)" 
-        options={{ 
-          headerShown: false,
-        }} 
-      />
-    </Stack>
+    <ErrorBoundary>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen 
+          name="screens/SignInScreen" 
+          options={{ 
+            headerShown: false
+          }} 
+        />
+        <Stack.Screen 
+          name="screens/SignUpScreen" 
+          options={{ 
+            headerShown: false
+          }} 
+        />
+        <Stack.Screen 
+          name="screens/ForgotPasswordScreen" 
+          options={{ 
+            headerShown: true,
+            headerTitle: '',
+            headerTransparent: true,
+            headerTintColor: '#000',
+          }} 
+        />
+        <Stack.Screen 
+          name="(app)" 
+          options={{ 
+            headerShown: false,
+          }} 
+        />
+      </Stack>
+    </ErrorBoundary>
   );
 }
 

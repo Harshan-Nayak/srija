@@ -1,0 +1,27 @@
+{
+  "name": "srija-backend",
+  "version": "1.0.0",
+  "description": "Backend service for Vertex AI Imagen integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "vertex-ai",
+    "imagen",
+    "google-cloud"
+  ],
+  "author": "Srija App",
+  "license": "MIT"
+}
