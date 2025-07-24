@@ -17,31 +17,62 @@ const GOOGLE_CLOUD_LOCATION = 'us-central1';
 const IMAGEN_MODEL = 'imagen-4.0-generate-preview-06-06';
 
 /**
- * Get Google Cloud access token using gcloud CLI with improved error handling
+ * Get Google Cloud access token using service account
  */
-const getGoogleCloudAccessToken = () => {
-  return new Promise((resolve, reject) => {
-    exec('gcloud auth print-access-token', (error, stdout, stderr) => {
-      if (error) {
-        console.error('❌ Error executing gcloud command:', error);
-        reject(error);
-        return;
-      }
-      if (stderr) {
-        console.error('⚠️ gcloud stderr:', stderr);
-        // Consider rejecting if stderr contains actual errors
-      }
-      const token = stdout.trim();
-      if (!token) {
-        reject(new Error("Empty access token received from gcloud"));
-        return;
-      }
-      console.log('✅ Fresh access token obtained');
-      resolve(token);
+const getGoogleCloudAccessToken = async () => {
+  try {
+    // Check if we have the credentials JSON
+    if (!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+      throw new Error('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable not set');
+    }
+
+    // Parse the credentials
+    const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+
+    // Get token using service account credentials
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: generateJWT(credentials),
+      }),
     });
-  });
+
+    if (!response.ok) {
+      throw new Error(`Token request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Fresh access token obtained via service account');
+    return data.access_token;
+  } catch (error) {
+    console.error('❌ Error getting access token:', error);
+    throw error;
+  }
 };
 
+/**
+ * Generate JWT for service account authentication
+ */
+const generateJWT = (credentials) => {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600; // Token valid for 1 hour
+
+  const jwt = require('jsonwebtoken');
+  const payload = {
+    iss: credentials.client_email,
+    sub: credentials.client_email,
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: expiry,
+    scope: 'https://www.googleapis.com/auth/cloud-platform',
+  };
+
+  return jwt.sign(payload, credentials.private_key, { algorithm: 'RS256' });
+};
 /**
  * Health check endpoint
  */
